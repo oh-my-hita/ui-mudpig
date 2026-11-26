@@ -1,0 +1,97 @@
+buildscript {
+    ext {
+        kotlin_version = '2.2.21'
+        // Single source of truth for the plugin identity/version.
+        mudpigId = 'com.kajimi.hita.ui.mudpig'
+        mudpigName = '泥猪洗'
+        mudpigVersion = '0.1.0'
+        mudpigMinHostApi = 11
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.6.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+allprojects {
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            jvmTarget = '1.8'
+        }
+    }
+}
+
+def sha256 = { File f ->
+    def digest = java.security.MessageDigest.getInstance('SHA-256')
+    f.withInputStream { input ->
+        byte[] buf = new byte[8192]
+        int n
+        while ((n = input.read(buf)) > 0) digest.update(buf, 0, n)
+    }
+    digest.digest().encodeHex().toString()
+}
+
+// Publish this UI plugin into a ready-to-host market/ directory:
+// renames the debug APK, hashes it, and writes market/index.json.
+tasks.register('publishMarket') {
+    dependsOn ':ui-plugin:assembleDebug'
+    group = 'plugin'
+    description = '构建界面插件 APK 并生成 market/index.json'
+    doLast {
+        def marketDir = rootProject.file('market')
+        marketDir.mkdirs()
+
+        def apk = rootProject.file('ui-plugin/build/outputs/apk/debug/ui-plugin-debug.apk')
+        if (!apk.isFile()) {
+            throw new GradleException("APK 不存在：${apk}")
+        }
+
+        // Guard against drift: the APK's plugin.json must match the root constants.
+        def metaText = null
+        new java.util.zip.ZipFile(apk).withCloseable { zip ->
+            def entry = zip.getEntry('assets/plugin.json')
+            if (entry == null) throw new GradleException('APK 中缺少 assets/plugin.json')
+            metaText = new String(zip.getInputStream(entry).bytes, java.nio.charset.StandardCharsets.UTF_8)
+        }
+        def meta = new groovy.json.JsonSlurper().parseText(metaText)
+        if (meta.id != mudpigId || meta.version != mudpigVersion) {
+            throw new GradleException(
+                "plugin.json 与构建常量不一致：${meta.id}@${meta.version} != ${mudpigId}@${mudpigVersion}")
+        }
+
+        def fileName = "mudpig-${mudpigVersion}.apk"
+        def published = new File(marketDir, fileName)
+        published.bytes = apk.bytes
+
+        def index = [
+            plugins  : [],
+            uiPlugins: [[
+                id         : mudpigId,
+                name       : mudpigName,
+                version    : mudpigVersion,
+                url        : fileName,
+                sha256     : sha256(published),
+                size       : published.length(),
+                minHostApi : mudpigMinHostApi,
+                description: '用清水冲掉小猪身上的泥巴。网页小游戏，运行时需联网。',
+                author     : 'kajimi',
+                tags       : ['game', 'webview', 'webgame'],
+                mainTabs   : [[
+                    id       : 'mudpig',
+                    title    : '泥猪洗',
+                    order    : 120,
+                    iconAsset: 'tab_mudpig.png'
+                ]]
+            ]]
+        ]
+        new File(marketDir, 'index.json').text =
+            groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(index)) + '\n'
+
+        println "market/${fileName} (${published.length()} bytes, sha256=${sha256(published)})"
+        println 'market/index.json 已更新'
+    }
+}

@@ -1,0 +1,31 @@
+{
+    "plugins": [
+        
+    ],
+    "uiPlugins": [
+        {
+            "id": "com.kajimi.hita.ui.mudpig",
+            "name": "\u6ce5\u732a\u6d17",
+            "version": "0.1.0",
+            "url": "mudpig-0.1.0.apk",
+            "sha256": "e7cb3cb70480d036d566c17e7a7cee5285dfd0c884241c468e72bec77be1781b",
+            "size": 357183,
+            "minHostApi": 11,
+            "description": "\u7528\u6e05\u6c34\u51b2\u6389\u5c0f\u732a\u8eab\u4e0a\u7684\u6ce5\u5df4\u3002\u7f51\u9875\u5c0f\u6e38\u620f\uff0c\u8fd0\u884c\u65f6\u9700\u8054\u7f51\u3002",
+            "author": "kajimi",
+            "tags": [
+                "game",
+                "webview",
+                "webgame"
+            ],
+            "mainTabs": [
+                {
+                    "id": "mudpig",
+                    "title": "\u6ce5\u732a\u6d17",
+                    "order": 120,
+                    "iconAsset": "tab_mudpig.png"
+                }
+            ]
+        }
+    ]
+}

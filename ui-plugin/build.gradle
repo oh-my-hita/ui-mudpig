@@ -1,0 +1,29 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+}
+
+android {
+    namespace 'com.kajimi.hita.ui.mudpig'
+    defaultConfig {
+        applicationId 'com.kajimi.hita.ui.mudpig'
+        minSdkVersion 23
+        targetSdk 33
+        compileSdk 36
+        versionCode 1
+        versionName rootProject.ext.mudpigVersion
+        multiDexEnabled false
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+dependencies {
+    compileOnly 'io.github.kajimi16.ohmyhita:plugin-sdk:11.1'
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib:2.2.21"
+}

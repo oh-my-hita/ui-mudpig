@@ -1,0 +1,10 @@
+{
+  "id": "com.kajimi.hita.ui.mudpig",
+  "name": "泥猪洗",
+  "version": "0.1.0",
+  "entryClass": "com.kajimi.hita.ui.mudpig.MudPigUiPlugin",
+  "apiVersion": 11,
+  "composeVersion": "1.9.4",
+  "capabilities": ["hita.ui.mainTab", "com.kajimi.hita.ui.mudpig.play"],
+  "mainTabs": [{"id":"mudpig","title":"泥猪洗","order":120,"iconAsset":"tab_mudpig.png"}]
+}
