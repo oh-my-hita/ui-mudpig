@@ -163,11 +163,14 @@ adb shell am broadcast \
 
 ## 发布到 oh-my-hita 官方市场
 
-1. 以 MIT 许可从本目录创建 GitHub 仓库（若仓库尚无 `LICENSE`，补上 MIT 文本）。
+- 仓库：<https://github.com/oh-my-hita/ui-mudpig>
+- 发布：<https://github.com/oh-my-hita/ui-mudpig/releases/tag/v0.1.0>
+  （`mudpig-0.1.0.apk`，357,183 B，sha256 `e7cb3cb70480d036d566c17e7a7cee5285dfd0c884241c468e72bec77be1781b`）
+
+1. 本目录已在 <https://github.com/oh-my-hita/ui-mudpig> 以 MIT 许可（`LICENSE`）发布。
 2. 发版时同时修改根 `build.gradle` 的 `mudpigVersion` 与
    `ui-plugin/src/main/assets/plugin.json` 的 `version`；`publishMarket` 会校验两者一致，不一致直接失败。
-3. push 后，在 <https://github.com/oh-my-hita/registry> 提交发布请求（若 org 工作流尚未就绪，
-   可改用社区仓库 `kajimi16/hita-community-plugins`），包含：
+3. push 后在 <https://github.com/oh-my-hita/registry> 提交发布请求，包含：
    - repo URL、ref
    - module `:ui-plugin`、kind `ui`
    - plugin_id `com.kajimi.hita.ui.mudpig`
