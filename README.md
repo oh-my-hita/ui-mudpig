@@ -76,7 +76,7 @@ flowchart LR
 ## 已验证的宿主契约（本地 0.10.4 E2E + 宿主源码）
 
 以下事实来自对 0.10.4 宿主的本地 E2E 验证与源码审阅，行号指
-[oh-my-hita-standalone](https://github.com/oh-my-hita/oh-my-hita-standalone) 对应源码。
+[kajimi16/OH-MY-HITA](https://github.com/kajimi16/OH-MY-HITA) 对应源码。
 注意：构建期依赖 `plugin-sdk:11.1` 是 SDK artifact 版本号，与宿主
 `HITA_API_VERSION=13` 是两套编号，不可混用。
 
@@ -89,7 +89,7 @@ flowchart LR
 | 宿主不会给 `PluginUiHost.arguments` 注入 capability；只有主标签路径由宿主注入 `tabId` / `tabTitle` / `capability` | `PluginUiActivity.kt:91-95,101`；`RuntimeUiTabFragment.kt:39-41` |
 | `PluginUiActivity` = 垂直 `LinearLayout`：56dp `Toolbar` + 内容；无 `onBackPressed`、无沉浸式/全屏、无 `configChanges` | `PluginUiActivity.kt:51,70-81` |
 | 安装时校验 `plugin.json`；`mainTabs[].iconAsset` 从插件 APK 的 `assets/` 用 `ZipFile` 读取 | `UiPluginManager.kt:62-73,279-313` |
-| 宿主 0.10.4：`HITA_API_VERSION=13`、Compose 运行时 1.9.4；本插件声明 `apiVersion`/`requiresApi=11`（≤13，故被接受）；`composeVersion` 必须等于 `1.9.4` | `oh-my-hita-standalone/api/src/main/java/com/stupidtree/hita/api/Plugin.kt`（`const val HITA_API_VERSION = 13`）；`oh-my-hita-standalone/build.gradle`（`compose_version = '1.9.4'`） |
+| 宿主 0.10.4：`HITA_API_VERSION=13`、Compose 运行时 1.9.4；本插件声明 `apiVersion`/`requiresApi=11`（≤13，故被接受）；`composeVersion` 必须等于 `1.9.4` | `api/src/main/java/com/stupidtree/hita/api/Plugin.kt`（`const val HITA_API_VERSION = 13`）；`build.gradle`（`compose_version = '1.9.4'`） |
 | 宿主自带 WebView；无 `androidx.webkit` 依赖 | 本地 0.10.4 E2E 与宿主 `app/build.gradle` 依赖清单 |
 
 ## 构建与发布
@@ -120,7 +120,11 @@ flowchart LR
 
 ### 自定义插件源（release 宿主 0.10.4）
 
-1. 把整个 `market/` 目录部署到任意 HTTP(S) 静态站点，确保 `index.json` 可访问。
+1. 准备完整目录：`market/mudpig-0.1.0.apk` 被 `.gitignore` 忽略，所以全新 clone 只有
+   `market/index.json`。先运行 `./gradlew publishMarket` 生成 APK，或从
+   [release](https://github.com/oh-my-hita/ui-mudpig/releases/tag/v0.1.0) 下载
+   `mudpig-0.1.0.apk` 放进 `market/`，否则 `index.json` 的相对 `url` 会 404。
+   然后把整个 `market/` 目录部署到任意 HTTP(S) 静态站点，确保 `index.json` 可访问。
 2. 宿主中打开：**插件市场 → 插件源 → 添加插件源**，填写索引地址
    `https://<你的站点>/market/index.json`。`index.json` 里的 `url` 是相对路径
    `mudpig-0.1.0.apk`，会相对索引地址解析到同目录的 APK，因此必须连同 APK 一起托管。
@@ -167,19 +171,19 @@ adb shell am broadcast \
 - 发布：<https://github.com/oh-my-hita/ui-mudpig/releases/tag/v0.1.0>
   （`mudpig-0.1.0.apk`，357,183 B，sha256 `e7cb3cb70480d036d566c17e7a7cee5285dfd0c884241c468e72bec77be1781b`）
 
-1. 本目录已在 <https://github.com/oh-my-hita/ui-mudpig> 以 MIT 许可（`LICENSE`）发布。
-2. 发版时同时修改根 `build.gradle` 的 `mudpigVersion` 与
-   `ui-plugin/src/main/assets/plugin.json` 的 `version`；`publishMarket` 会校验两者一致，不一致直接失败。
-3. push 后在 <https://github.com/oh-my-hita/registry> 提交发布请求，包含：
-   - repo URL、ref
-   - module `:ui-plugin`、kind `ui`
-   - plugin_id `com.kajimi.hita.ui.mudpig`
-   - name `泥猪洗`、version `0.1.0`
-   - entry_class `com.kajimi.hita.ui.mudpig.MudPigUiPlugin`
-   - min_host_api `11`
-   - tags `game,webview,webgame`
-4. CI 负责构建 APK、校验 `assets/plugin.json`、计算 sha256，并写入 `dist/` 与 registry。
-5. 全程无需向宿主提交 PR；后续更新只需 bump 版本并重复发布请求。
+本目录以 MIT 许可（`LICENSE`）发布。官方市场由
+[oh-my-hita/registry](https://github.com/oh-my-hita/registry) 的
+`.github/workflows/update-registry.yml` **自动扫描**，无需提交发布请求或 PR：
+
+- 触发：每日 `17 3 * * *` 定时，或手动 `workflow_dispatch`。
+- 范围：org 下所有非归档的 `ui-*` 仓库。
+- 读取：`ui-plugin/src/main/assets/plugin.json` + **最新 GitHub Release 的 APK**，
+  下载 APK 计算 sha256，写入 `registry/index.json`（无 `dist/` 目录）。
+- 因此发布只需两步：push 代码，并创建带 APK 的 latest release；后续更新 bump 版本后
+  发新 release 即可。
+- 已知脚本特性（对本插件非阻塞）：registry 条目写死 `minHostApi: 10`
+  （插件实际要求 11，仍 ≤ 宿主 0.10.4 的 13）；`plugin.json` 无 `description` 字段时
+  使用默认描述，`mainTabs` / `capabilities` 会原样带入。
 
 ## 游戏分析
 
